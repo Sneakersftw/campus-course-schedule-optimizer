@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routes import schedules
+from app.routes import schedules, ai as ai_routes
 
 app = FastAPI(
     title="Campus Course Schedule Optimizer API",
@@ -17,7 +18,7 @@ app.add_middleware(
 )
 
 app.include_router(schedules.router)
-
+app.include_router(ai_routes.router)
 
 @app.get("/")
 def root():
