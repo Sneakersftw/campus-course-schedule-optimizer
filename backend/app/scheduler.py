@@ -89,3 +89,70 @@ def generate_valid_schedules(eligible_courses, min_credits=12, max_credits=18):
 
     backtrack(0, [])
     return all_schedules
+def score_schedule(schedule: list, preferences: dict = None) -> int:
+    """
+    Scores a valid schedule. Higher is better.
+    preferences is an optional dict that can include:
+      - earliest_class_time (datetime.time)
+      - avoid_days (list of single-character day codes, e.g. ["F"])
+      - prefer_fewer_days (bool)
+    """
+    if preferences is None:
+        preferences = {}
+
+    score = 100
+
+    # Penalize gaps between classes on the same day
+    score -= _total_gap_minutes(schedule) // 30
+
+    # Penalize classes that start before the preferred earliest time
+    earliest = preferences.get("earliest_class_time")
+    if earliest:
+        for section in schedule:
+            if section.start_time < earliest:
+                score -= 10
+
+    # Penalize classes on days the student wants to avoid
+    avoid_days = preferences.get("avoid_days", [])
+    for section in schedule:
+        for day in avoid_days:
+            if day in section.days_of_week:
+                score -= 15
+
+    # Reward fewer distinct class days, if preferred
+    if preferences.get("prefer_fewer_days"):
+        distinct_days = set()
+        for section in schedule:
+            distinct_days.update(section.days_of_week)
+        score += (5 - len(distinct_days)) * 2  # more bonus for fewer days
+
+    return score
+
+
+def _total_gap_minutes(schedule: list) -> int:
+    """Sums gap time between classes on the same day, across the whole schedule."""
+    from collections import defaultdict
+
+    by_day = defaultdict(list)
+    for section in schedule:
+        for day in section.days_of_week:
+            by_day[day].append(section)
+
+    total_gap = 0
+    for day, sections in by_day.items():
+        sections_sorted = sorted(sections, key=lambda s: s.start_time)
+        for i in range(len(sections_sorted) - 1):
+            end = sections_sorted[i].end_time
+            start = sections_sorted[i + 1].start_time
+            gap_minutes = (start.hour * 60 + start.minute) - (end.hour * 60 + end.minute)
+            if gap_minutes > 0:
+                total_gap += gap_minutes
+
+    return total_gap
+
+
+def rank_schedules(schedules: list, preferences: dict = None) -> list:
+    """Returns schedules sorted from highest score to lowest."""
+    scored = [(score_schedule(s, preferences), s) for s in schedules]
+    scored.sort(key=lambda pair: pair[0], reverse=True)
+    return [s for score, s in scored]

@@ -80,3 +80,32 @@ def test_course_with_multiple_sections_offers_choice():
 
     # Should generate two valid schedules: one with each section
     assert len(schedules) == 2
+
+def test_rank_schedules_orders_best_first():
+    course_a = FakeCourse(credit_hours=3, sections=[])
+    section_with_gap = FakeSection(course_a, "MW", time(9, 0), time(10, 0))
+    course_b = FakeCourse(credit_hours=3, sections=[])
+    section_far_later = FakeSection(course_b, "MW", time(14, 0), time(15, 0))
+
+    course_c = FakeCourse(credit_hours=3, sections=[])
+    section_back_to_back = FakeSection(course_c, "MW", time(10, 0), time(11, 0))
+
+    schedule_with_big_gap = [section_with_gap, section_far_later]
+    schedule_tight = [section_with_gap, section_back_to_back]
+
+    ranked = scheduler.rank_schedules([schedule_with_big_gap, schedule_tight])
+
+    # The tighter schedule (less gap time) should be ranked first
+    assert ranked[0] == schedule_tight
+
+
+def test_avoid_days_lowers_score():
+    course_a = FakeCourse(credit_hours=3, sections=[])
+    friday_section = FakeSection(course_a, "F", time(10, 0), time(11, 0))
+
+    score_with_avoidance = scheduler.score_schedule(
+        [friday_section], preferences={"avoid_days": ["F"]}
+    )
+    score_without_preference = scheduler.score_schedule([friday_section], preferences={})
+
+    assert score_with_avoidance < score_without_preference
