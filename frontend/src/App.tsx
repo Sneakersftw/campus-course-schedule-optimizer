@@ -28,6 +28,9 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [minCredits, setMinCredits] = useState(6);
   const [maxCredits, setMaxCredits] = useState(16);
+  const [preferenceText, setPreferenceText] = useState("");
+  const [parsedPreferences, setParsedPreferences] = useState<any>(null);
+  const [parsing, setParsing] = useState(false);
 
   async function fetchSchedules() {
     setLoading(true);
@@ -43,6 +46,23 @@ function App() {
       setError("Could not load schedules. Is the backend running?");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function parsePreferences() {
+    setParsing(true);
+    try {
+      const response = await fetch("http://127.0.0.1:8000/ai/parse-preferences", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: preferenceText }),
+      });
+      const data = await response.json();
+      setParsedPreferences(data);
+    } catch (err) {
+      setParsedPreferences({ error: "Could not reach AI service." });
+    } finally {
+      setParsing(false);
     }
   }
 
@@ -85,6 +105,35 @@ function App() {
           >
             Generate Schedules
           </button>
+        </div>
+
+        <div className="mb-8 rounded-xl border bg-white p-5 shadow-sm">
+          <label className="block text-sm font-medium text-slate-700 mb-2">
+            Describe your scheduling preferences
+          </label>
+          <textarea
+            value={preferenceText}
+            onChange={(e) => setPreferenceText(e.target.value)}
+            placeholder="e.g. I want 15 credit hours, no Friday classes, nothing before 10am"
+            className="w-full rounded-md border px-3 py-2 text-sm"
+            rows={3}
+          />
+          <button
+            onClick={parsePreferences}
+            disabled={parsing || !preferenceText}
+            className="mt-3 rounded-md bg-slate-700 px-5 py-2 font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
+          >
+            {parsing ? "Parsing..." : "Parse Preferences"}
+          </button>
+
+          {parsedPreferences && (
+            <div className="mt-4 rounded-md bg-slate-50 p-3 text-sm">
+              <p className="font-medium text-slate-700 mb-1">AI understood:</p>
+              <pre className="whitespace-pre-wrap text-slate-600">
+                {JSON.stringify(parsedPreferences, null, 2)}
+              </pre>
+            </div>
+          )}
         </div>
 
         {loading && <p className="text-slate-600">Generating schedules...</p>}
