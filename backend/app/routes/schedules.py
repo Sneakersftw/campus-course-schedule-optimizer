@@ -87,9 +87,12 @@ def get_schedules_with_preferences(
         "prefer_fewer_days": False,
     }
     if preferences.earliest_class_time:
-        scoring_prefs["earliest_class_time"] = datetime.strptime(
-            preferences.earliest_class_time, "%H:%M"
-        ).time()
+        try:
+            scoring_prefs["earliest_class_time"] = datetime.strptime(
+                preferences.earliest_class_time, "%H:%M"
+            ).time()
+        except ValueError:
+            pass  # ignore malformed time strings rather than crashing the request
 
     ranked = scheduler.rank_schedules(schedules, scoring_prefs)
 
