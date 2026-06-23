@@ -65,8 +65,8 @@ def test_get_eligible_courses_for_sample_student():
     eligible = scheduler.get_eligible_courses(db, student_id=1)
     eligible_codes = [c.course_code for c in eligible]
     db.close()
-    # Student 1 completed CSC 1301 and MATH 2211 in your seed data
-    assert "CSC 1302" in eligible_codes  # only needs CSC 1301, which is done
-    assert "CSC 2720" not in eligible_codes  # needs CSC 1302, not done yet
+    # Student 1 has completed CSC 1301, MATH 2211, and CSC 1302
+    assert "CSC 2720" in eligible_codes  # needs CSC 1302, which is now done
     assert "CSC 1301" not in eligible_codes  # already completed, should be excluded
+    assert "CSC 1302" not in eligible_codes  # already completed, should be excluded
     

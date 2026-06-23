@@ -109,3 +109,31 @@ def test_avoid_days_lowers_score():
     score_without_preference = scheduler.score_schedule([friday_section], preferences={})
 
     assert score_with_avoidance < score_without_preference
+
+def test_no_schedules_when_credits_unreachable():
+    course_a = FakeCourse(credit_hours=3, sections=[])
+    section_a = FakeSection(course_a, "MW", time(9, 0), time(10, 0))
+    course_a.sections = [section_a]
+
+    # Only 3 credits available, but asking for 30+
+    schedules = scheduler.generate_valid_schedules(
+        [course_a], min_credits=30, max_credits=40
+    )
+    assert schedules == []
+
+
+def test_empty_eligible_courses_with_zero_min_returns_one_empty_schedule():
+    # With no courses available and min_credits=0, the only "valid" schedule is empty
+    schedules = scheduler.generate_valid_schedules([], min_credits=0, max_credits=20)
+    assert schedules == [[]]
+
+
+def test_empty_eligible_courses_with_positive_min_returns_nothing():
+    # With no courses available and a real credit requirement, nothing can satisfy it
+    schedules = scheduler.generate_valid_schedules([], min_credits=3, max_credits=20)
+    assert schedules == []
+
+
+def test_rank_schedules_handles_empty_list():
+    ranked = scheduler.rank_schedules([])
+    assert ranked == []
