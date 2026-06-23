@@ -36,9 +36,18 @@ function App() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(
-        `http://127.0.0.1:8000/schedules/1?min_credits=${minCredits}&max_credits=${maxCredits}`
-      );
+      let response;
+      if (parsedPreferences && !parsedPreferences.error) {
+        response = await fetch("http://127.0.0.1:8000/schedules/1/with-preferences", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(parsedPreferences),
+        });
+      } else {
+        response = await fetch(
+          `http://127.0.0.1:8000/schedules/1?min_credits=${minCredits}&max_credits=${maxCredits}`
+        );
+      }
       if (!response.ok) throw new Error("Failed to fetch schedules");
       const data: ApiResponse = await response.json();
       setSchedules(data.top_schedules);
