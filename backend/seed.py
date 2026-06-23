@@ -70,6 +70,7 @@ sections_data = [
     ("CSC 3210", "001", "Dr. Brown", "MW", time(12, 0), time(13, 15)),
     ("MATH 2211", "001", "Dr. Garcia", "MWF", time(8, 0), time(8, 50)),
     ("MATH 2211", "002", "Dr. Garcia", "TR", time(14, 0), time(15, 15)),
+    ("MATH 2212", "001", "Dr. Garcia", "MWF", time(10, 0), time(10, 50)),  #new
     ("CSC 3320", "001", "Dr. Brown", "TR", time(10, 0), time(11, 15)),
     ("CSC 4351", "001", "Dr. Nguyen", "MW", time(14, 0), time(15, 15)),
     ("CSC 4520", "001", "Dr. Kim", "MWF", time(11, 0), time(11, 50)),
@@ -95,6 +96,7 @@ db.commit()
 completed = [
     ("CSC 1301", "Spring 2026", "A"),
     ("MATH 2211", "Spring 2026", "B"),
+    ("CSC 1302", "Fall 2025", "B"),  #new
 ]
 
 for course_code, semester, grade in completed:
