@@ -156,3 +156,16 @@ def rank_schedules(schedules: list, preferences: dict = None) -> list:
     scored = [(score_schedule(s, preferences), s) for s in schedules]
     scored.sort(key=lambda pair: pair[0], reverse=True)
     return [s for score, s in scored]
+
+def schedule_violates_avoided_days(schedule: list, avoid_days: list) -> bool:
+    """
+    Returns True if any section in the schedule falls on a day the student
+    explicitly wants to avoid.
+    """
+    if not avoid_days:
+        return False
+    for section in schedule:
+        for day in avoid_days:
+            if day in section.days_of_week:
+                return True
+    return False

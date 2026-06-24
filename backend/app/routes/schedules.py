@@ -82,8 +82,16 @@ def get_schedules_with_preferences(
     eligible = scheduler.get_eligible_courses(db, student_id)
     schedules = scheduler.generate_valid_schedules(eligible, min_credits, max_credits)
 
+    avoid_day_letters = [_day_to_letter(d) for d in preferences.avoid_days]
+
+    # Hard filter: exclude any schedule that includes an explicitly avoided day
+    schedules = [
+        s for s in schedules
+        if not scheduler.schedule_violates_avoided_days(s, avoid_day_letters)
+    ]
+
     scoring_prefs = {
-        "avoid_days": [_day_to_letter(d) for d in preferences.avoid_days],
+        "avoid_days": avoid_day_letters,
         "prefer_fewer_days": False,
     }
     if preferences.earliest_class_time:

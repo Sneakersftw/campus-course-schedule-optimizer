@@ -22,6 +22,17 @@ interface ApiResponse {
   top_schedules: ScheduleResult[];
 }
 
+const ALL_DAYS = ["M", "T", "W", "R", "F"];
+
+function dayStripColor(daysOfWeek: string, index: number) {
+  const dayChar = ALL_DAYS[index];
+  if (daysOfWeek.includes(dayChar)) {
+    // Alternate between the two accent colors based on position for visual rhythm
+    return index % 2 === 0 ? "bg-terracotta" : "bg-forest";
+  }
+  return "bg-parchment";
+}
+
 function App() {
   const [schedules, setSchedules] = useState<ScheduleResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -76,102 +87,137 @@ function App() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-900 px-6 py-12">
-      <div className="mx-auto max-w-4xl">
-        <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-blue-600">
+    <main className="min-h-screen bg-paper text-ink px-6 py-12 font-sans">
+      <div className="mx-auto max-w-5xl">
+        <p className="mb-1 font-serif text-xs uppercase tracking-[0.12em] text-stone">
           Campus Course-Schedule Optimizer
         </p>
-        <h1 className="mb-6 text-3xl font-bold tracking-tight md:text-4xl">
-          Generate your semester schedule
+        <h1 className="mb-8 font-serif text-3xl font-semibold tracking-tight md:text-4xl">
+          Build your semester
         </h1>
 
-        <div className="mb-8 flex flex-wrap items-end gap-4 rounded-xl border bg-white p-5 shadow-sm">
-          <div>
-            <label className="block text-sm font-medium text-slate-700">
-              Min Credits
-            </label>
-            <input
-              type="number"
-              value={minCredits}
-              onChange={(e) => setMinCredits(Number(e.target.value))}
-              className="mt-1 w-24 rounded-md border px-3 py-2"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700">
-              Max Credits
-            </label>
-            <input
-              type="number"
-              value={maxCredits}
-              onChange={(e) => setMaxCredits(Number(e.target.value))}
-              className="mt-1 w-24 rounded-md border px-3 py-2"
-            />
-          </div>
-          <button
-            onClick={fetchSchedules}
-            className="rounded-md bg-blue-600 px-5 py-2 font-semibold text-white hover:bg-blue-700"
-          >
-            Generate Schedules
-          </button>
-        </div>
-
-        <div className="mb-8 rounded-xl border bg-white p-5 shadow-sm">
-          <label className="block text-sm font-medium text-slate-700 mb-2">
-            Describe your scheduling preferences
-          </label>
-          <textarea
-            value={preferenceText}
-            onChange={(e) => setPreferenceText(e.target.value)}
-            placeholder="e.g. I want 15 credit hours, no Friday classes, nothing before 10am"
-            className="w-full rounded-md border px-3 py-2 text-sm"
-            rows={3}
-          />
-          <button
-            onClick={parsePreferences}
-            disabled={parsing || !preferenceText}
-            className="mt-3 rounded-md bg-slate-700 px-5 py-2 font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
-          >
-            {parsing ? "Parsing..." : "Parse Preferences"}
-          </button>
-
-          {parsedPreferences && (
-            <div className="mt-4 rounded-md bg-slate-50 p-3 text-sm">
-              <p className="font-medium text-slate-700 mb-1">AI understood:</p>
-              <pre className="whitespace-pre-wrap text-slate-600">
-                {JSON.stringify(parsedPreferences, null, 2)}
-              </pre>
-            </div>
-          )}
-        </div>
-
-        {loading && <p className="text-slate-600">Generating schedules...</p>}
-        {error && <p className="text-red-600">{error}</p>}
-
-        <div className="grid gap-4 md:grid-cols-2">
-          {schedules.map((schedule, i) => (
-            <div key={i} className="rounded-xl border bg-white p-5 shadow-sm">
-              <div className="mb-3 flex items-center justify-between">
-                <h2 className="font-semibold">Schedule {i + 1}</h2>
-                <span className="text-sm text-slate-500">
-                  Score: {schedule.score} · {schedule.total_credits} credits
-                </span>
+        <div className="grid gap-6 md:grid-cols-[0.9fr_1.4fr]">
+          {/* Left column: inputs */}
+          <div className="flex flex-col gap-4">
+            <div className="rounded-lg border border-parchment bg-white p-5">
+              <p className="mb-3 border-b border-parchment pb-2 font-serif text-sm text-ink">
+                Credit load
+              </p>
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <label className="text-[11px] uppercase tracking-wide text-stone">
+                    Min
+                  </label>
+                  <input
+                    type="number"
+                    value={minCredits}
+                    onChange={(e) => setMinCredits(Number(e.target.value))}
+                    className="mt-1 w-full rounded-md border border-parchment px-3 py-2 text-sm"
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="text-[11px] uppercase tracking-wide text-stone">
+                    Max
+                  </label>
+                  <input
+                    type="number"
+                    value={maxCredits}
+                    onChange={(e) => setMaxCredits(Number(e.target.value))}
+                    className="mt-1 w-full rounded-md border border-parchment px-3 py-2 text-sm"
+                  />
+                </div>
               </div>
-              <ul className="space-y-2 text-sm">
-                {schedule.courses.map((course, j) => (
-                  <li key={j} className="border-b pb-2 last:border-0">
-                    <div className="font-medium">
-                      {course.course_code} — {course.course_name}
-                    </div>
-                    <div className="text-slate-600">
-                      Section {course.section_number} · {course.professor} ·{" "}
-                      {course.days_of_week} {course.start_time}–{course.end_time}
-                    </div>
-                  </li>
-                ))}
-              </ul>
+              <button
+                onClick={fetchSchedules}
+                className="mt-4 w-full rounded-md bg-terracotta py-2.5 font-serif text-sm font-medium text-paper hover:opacity-90"
+              >
+                Generate schedules
+              </button>
             </div>
-          ))}
+
+            <div className="rounded-lg border border-parchment bg-white p-5">
+              <p className="mb-3 border-b border-parchment pb-2 font-serif text-sm text-ink">
+                Tell us what you want
+              </p>
+              <textarea
+                value={preferenceText}
+                onChange={(e) => setPreferenceText(e.target.value)}
+                placeholder="No Friday classes, start after 10am"
+                rows={3}
+                className="w-full resize-none rounded-md border border-parchment px-3 py-2 text-sm"
+              />
+              <button
+                onClick={parsePreferences}
+                disabled={parsing || !preferenceText}
+                className="mt-3 w-full rounded-md border border-forest py-2 font-serif text-sm font-medium text-forest hover:bg-forest hover:text-paper disabled:opacity-50"
+              >
+                {parsing ? "Parsing…" : "Parse preferences"}
+              </button>
+
+              {parsedPreferences && (
+                <div className="mt-3 rounded-md bg-parchment/60 p-3 font-mono text-xs text-stone">
+                  <pre className="whitespace-pre-wrap">
+                    {JSON.stringify(parsedPreferences, null, 2)}
+                  </pre>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Right column: results */}
+          <div>
+            {loading && (
+              <p className="font-serif text-sm text-stone">Generating schedules…</p>
+            )}
+            {error && (
+              <p className="font-serif text-sm text-terracotta">{error}</p>
+            )}
+            {!loading && !error && schedules.length === 0 && (
+              <p className="font-serif text-sm text-stone">
+                No schedules matched those constraints. Try loosening your preferences or credit range.
+              </p>
+            )}
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              {schedules.map((schedule, i) => (
+                <div
+                  key={i}
+                  className="overflow-hidden rounded-lg border border-parchment bg-white"
+                >
+                  <div className="flex items-baseline justify-between px-4 pt-3 pb-2">
+                    <h2 className="font-serif text-base font-semibold text-ink">
+                      Schedule {i + 1}
+                    </h2>
+                    <span className="font-mono text-[11px] text-stone">
+                      {schedule.score} pts · {schedule.total_credits}cr
+                    </span>
+                  </div>
+
+                  <ul>
+                    {schedule.courses.map((course, j) => (
+                      <li key={j} className="border-t border-parchment/70 px-4 py-3">
+                        <div className="mb-1.5 flex h-1 gap-0.5 overflow-hidden rounded-full">
+                          {ALL_DAYS.map((_, idx) => (
+                            <div
+                              key={idx}
+                              className={`flex-1 ${dayStripColor(course.days_of_week, idx)}`}
+                            />
+                          ))}
+                        </div>
+                        <p className="text-sm font-medium text-ink">
+                          {course.course_code} — {course.course_name}
+                        </p>
+                        <p className="font-mono text-[11px] text-stone">
+                          {course.days_of_week} {course.start_time}–{course.end_time} ·{" "}
+                          {course.professor}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </main>
